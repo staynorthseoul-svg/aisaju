@@ -423,7 +423,7 @@
           <p id="adminSaveMsg" class="admin-msg"></p>
 
           <div class="security-note">
-            <b>안내:</b> 저장한 내용은 Firebase 서버에 보관되어 PC·모바일 등 모든 기기에 바로 반영됩니다.
+            <b>중요:</b> 이 파일은 브라우저에서 동작하는 정적 HTML입니다. 현재 관리자 로그인은 데모용이며 실제 운영 환경에서는 서버 측 인증이 필요합니다.
           </div>
         </div>
       </div>
@@ -436,13 +436,9 @@
       <button class="login-close" onclick="cancelAdminLogin()" aria-label="닫기">×</button>
       <span class="eyebrow">ADMIN LOGIN</span>
       <h2 id="loginTitle">관리자 로그인</h2>
-      <p class="login-desc">운틈 관리자 페이지에 들어가려면 관리자 계정으로 로그인해주세요.</p>
+      <p class="login-desc">운틈 관리자 페이지에 들어가려면 비밀번호를 입력해주세요.</p>
 
       <div class="admin-fields">
-        <div class="field">
-          <label for="adminEmail">이메일</label>
-          <input id="adminEmail" type="email" autocomplete="username" placeholder="관리자 이메일">
-        </div>
         <div class="field">
           <label for="adminPw">비밀번호</label>
           <input id="adminPw" type="password" autocomplete="current-password" placeholder="비밀번호">
@@ -493,32 +489,8 @@ function showResult(){
   document.getElementById('result').classList.add('show');
   document.getElementById('result').scrollIntoView({behavior:'smooth', block:'nearest'});
 }
-</script>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, doc, onSnapshot, setDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { getAuth, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getAnalytics, isSupported } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyDy_DQM9anQmZtvbPKKJf6x3BKv1Smx7hw",
-  authDomain: "aisaju-ea269.firebaseapp.com",
-  projectId: "aisaju-ea269",
-  storageBucket: "aisaju-ea269.firebasestorage.app",
-  messagingSenderId: "783432748701",
-  appId: "1:783432748701:web:18f52282f4f319a8d24e74",
-  measurementId: "G-G7NK8M5SWC"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const auth = getAuth(app);
-isSupported().then(ok => { if(ok) getAnalytics(app); }).catch(() => {});
-
-// 사이트 문구는 Firestore의 site/content 문서 하나에 저장합니다.
-const contentRef = doc(db, 'site', 'content');
-const CACHE_KEY = 'untoom_admin_content';
+const ADMIN_PASSWORD = '1234';
 
 const defaultContent = {
   heroEyebrow: 'MY FORTUNE, MY MOMENT',
@@ -530,156 +502,122 @@ const defaultContent = {
   aboutDesc: '운틈은 사주를 미래를 단정하는 도구보다, 나의 성향과 흐름을 돌아보는 하나의 문화적 해석으로 바라봅니다. 결과는 참고용으로 활용하고 중요한 결정은 현실의 정보와 자신의 판단을 함께 고려하세요.'
 };
 
-const fields = {
-  heroEyebrow: 'editHeroEyebrow',
-  heroTitle: 'editHeroTitle',
-  heroCopy: 'editHeroCopy',
-  todayTitle: 'editTodayTitle',
-  todayDesc: 'editTodayDesc',
-  aboutTitle: 'editAboutTitle',
-  aboutDesc: 'editAboutDesc'
-};
-
-let currentContent = {...defaultContent};
-const $ = id => document.getElementById(id);
-
 function applyAdminContent(content){
-  $('heroEyebrow').textContent = content.heroEyebrow;
-  $('heroTitle').innerHTML = content.heroTitle
+  document.getElementById('heroEyebrow').textContent = content.heroEyebrow;
+  document.getElementById('heroTitle').innerHTML = content.heroTitle
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/\n/g, '<br>');
-  $('heroCopy').textContent = content.heroCopy;
-  $('todayTitle').textContent = content.todayTitle;
-  $('todayDesc').textContent = content.todayDesc;
-  $('aboutTitle').textContent = content.aboutTitle;
-  $('aboutDesc').textContent = content.aboutDesc;
+  document.getElementById('heroCopy').textContent = content.heroCopy;
+  document.getElementById('todayTitle').textContent = content.todayTitle;
+  document.getElementById('todayDesc').textContent = content.todayDesc;
+  document.getElementById('aboutTitle').textContent = content.aboutTitle;
+  document.getElementById('aboutDesc').textContent = content.aboutDesc;
+}
+
+function loadAdminContent(){
+  const saved = localStorage.getItem('untoom_admin_content');
+  if(saved){
+    try { applyAdminContent({...defaultContent, ...JSON.parse(saved)}); }
+    catch(e){ applyAdminContent(defaultContent); }
+  } else {
+    applyAdminContent(defaultContent);
+  }
 }
 
 function fillAdminForm(){
-  for(const [key, id] of Object.entries(fields)) $(id).value = currentContent[key] || '';
+  const saved = localStorage.getItem('untoom_admin_content');
+  let content = defaultContent;
+  if(saved){
+    try { content = {...defaultContent, ...JSON.parse(saved)}; } catch(e){}
+  }
+  document.getElementById('editHeroEyebrow').value = content.heroEyebrow;
+  document.getElementById('editHeroTitle').value = content.heroTitle
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<[^>]*>/g, '');
+  document.getElementById('editHeroCopy').value = content.heroCopy;
+  document.getElementById('editTodayTitle').value = content.todayTitle;
+  document.getElementById('editTodayDesc').value = content.todayDesc;
+  document.getElementById('editAboutTitle').value = content.aboutTitle;
+  document.getElementById('editAboutDesc').value = content.aboutDesc;
 }
 
-function setSaveMsg(text){ $('adminSaveMsg').textContent = text; }
-
-// 1) 이전 방문 때 받아둔 문구로 먼저 표시(깜빡임 방지)
-try {
-  const cached = localStorage.getItem(CACHE_KEY);
-  if(cached) currentContent = {...defaultContent, ...JSON.parse(cached)};
-} catch(e){}
-applyAdminContent(currentContent);
-
-// 2) 서버 문구를 실시간 구독 → 어느 기기에서 저장해도 열려있는 모든 화면에 즉시 반영
-onSnapshot(contentRef, snap => {
-  currentContent = {...defaultContent, ...(snap.exists() ? snap.data() : {})};
-  delete currentContent.updatedAt;
-  applyAdminContent(currentContent);
-  try { localStorage.setItem(CACHE_KEY, JSON.stringify(currentContent)); } catch(e){}
-}, err => console.error('문구 불러오기 실패:', err));
-
-function closeLoginModal(){
-  const modal = $('loginModal');
-  modal.classList.remove('show');
-  modal.setAttribute('aria-hidden','true');
-  document.body.classList.remove('modal-open');
+function toggleAdminAccess(checkbox){
+  if(checkbox.checked){
+    openLoginModal();
+  } else {
+    closeAdmin();
+  }
 }
 
-function openAdminPanel(){
-  closeLoginModal();
-  $('admin').style.display = 'block';
-  $('adminPanel').style.display = 'block';
-  $('adminEntry').checked = true;
-  setSaveMsg('');
-  fillAdminForm();
-  $('admin').scrollIntoView({behavior:'smooth'});
-}
-
-window.toggleAdminAccess = function(checkbox){
-  if(!checkbox.checked){ window.closeAdmin(); return; }
-  if(auth.currentUser){ openAdminPanel(); return; }  // 이미 로그인 상태면 바로 진입
-  const modal = $('loginModal');
+function openLoginModal(){
+  const modal = document.getElementById('loginModal');
   modal.classList.add('show');
   modal.setAttribute('aria-hidden','false');
   document.body.classList.add('modal-open');
-  $('adminEmail').focus();
-};
+}
 
-window.cancelAdminLogin = function(){
-  closeLoginModal();
-  $('adminEntry').checked = false;
-  $('adminLoginMsg').textContent = '';
-  $('adminPw').value = '';
-};
+function cancelAdminLogin(){
+  const modal = document.getElementById('loginModal');
+  modal.classList.remove('show');
+  modal.setAttribute('aria-hidden','true');
+  document.body.classList.remove('modal-open');
+  document.getElementById('adminEntry').checked = false;
+  document.getElementById('adminLoginMsg').textContent = '';
+  document.getElementById('adminPw').value = '';
+}
 
-window.loginAdmin = async function(){
-  const email = $('adminEmail').value.trim();
-  const pw = $('adminPw').value;
-  const msg = $('adminLoginMsg');
-  if(!email || !pw){ msg.textContent = '이메일과 비밀번호를 입력해주세요.'; return; }
-  msg.textContent = '로그인 중...';
-  try {
-    await signInWithEmailAndPassword(auth, email, pw);
+function loginAdmin(){
+  const pw = document.getElementById('adminPw').value;
+  const msg = document.getElementById('adminLoginMsg');
+
+  if(pw === ADMIN_PASSWORD){
+    const modal = document.getElementById('loginModal');
+    modal.classList.remove('show');
+    modal.setAttribute('aria-hidden','true');
+    document.body.classList.remove('modal-open');
+    document.getElementById('admin').style.display = 'block';
+    document.getElementById('adminPanel').style.display = 'block';
     msg.textContent = '';
-    $('adminPw').value = '';
-    openAdminPanel();
-  } catch(e){
-    console.error(e);
-    msg.textContent = (e.code === 'auth/too-many-requests')
-      ? '시도가 너무 많습니다. 잠시 후 다시 시도해주세요.'
-      : '이메일 또는 비밀번호가 올바르지 않습니다.';
-  }
-};
-
-window.saveAdminContent = async function(){
-  const data = {};
-  for(const [key, id] of Object.entries(fields)) data[key] = $(id).value.trim();
-  setSaveMsg('저장 중...');
-  try {
-    await setDoc(contentRef, {...data, updatedAt: serverTimestamp()});
-    setSaveMsg('저장되었습니다. PC·모바일 모든 화면에 반영됩니다. (' + new Date().toLocaleTimeString('ko-KR') + ')');
-  } catch(e){
-    console.error(e);
-    setSaveMsg(e.code === 'permission-denied'
-      ? '저장 권한이 없습니다. 관리자 계정으로 다시 로그인해주세요.'
-      : '저장에 실패했습니다: ' + (e.message || e.code));
-  }
-};
-
-window.resetAdminContent = async function(){
-  if(!confirm('모든 문구를 기본 문구로 되돌릴까요?')) return;
-  setSaveMsg('복원 중...');
-  try {
-    await deleteDoc(contentRef);
-    currentContent = {...defaultContent};
+    document.getElementById('adminPw').value = '';
     fillAdminForm();
-    setSaveMsg('기본 문구로 복원되었습니다.');
-  } catch(e){
-    console.error(e);
-    setSaveMsg('복원에 실패했습니다: ' + (e.message || e.code));
+    document.getElementById('admin').scrollIntoView({behavior:'smooth'});
+  } else {
+    msg.textContent = '비밀번호가 올바르지 않습니다.';
   }
-};
+}
 
-window.closeAdmin = function(){
-  $('admin').style.display = 'none';
-  $('adminEntry').checked = false;
-  closeLoginModal();
+function logoutAdmin(){
+  document.getElementById('admin').style.display = 'none';
+  document.getElementById('adminEntry').checked = false;
   window.scrollTo({top:0, behavior:'smooth'});
-};
+}
 
-window.logoutAdmin = async function(){
-  try { await signOut(auth); } catch(e){}
-  window.closeAdmin();
-};
+function closeAdmin(){
+  document.getElementById('admin').style.display = 'none';
+  document.getElementById('adminEntry').checked = false;
+  const modal = document.getElementById('loginModal');
+  modal.classList.remove('show');
+  modal.setAttribute('aria-hidden','true');
+  document.body.classList.remove('modal-open');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
 
 
 document.addEventListener('keydown', function(event){
-  const modal = $('loginModal');
-  if(!modal.classList.contains('show')) return;
-  if(event.key === 'Escape') window.cancelAdminLogin();
-  if(event.key === 'Enter' && ['adminPw','adminEmail'].includes(document.activeElement.id)) window.loginAdmin();
+  const modal = document.getElementById('loginModal');
+  if(event.key === 'Escape' && modal.classList.contains('show')){
+    cancelAdminLogin();
+  }
+  if(event.key === 'Enter' && modal.classList.contains('show') &&
+     document.activeElement.id === 'adminPw'){
+    loginAdmin();
+  }
 });
-</script>
 
+loadAdminContent();
+
+</script>
 </body>
 </html>
