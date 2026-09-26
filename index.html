@@ -620,6 +620,7 @@ window.toggleAdminAccess = function(checkbox){
   modal.classList.add('show');
   modal.setAttribute('aria-hidden','false');
   document.body.classList.add('modal-open');
+  setTimeout(() => $('adminPw').focus(), 50);
 };
 
 window.cancelAdminLogin = function(){
