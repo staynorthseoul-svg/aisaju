@@ -436,13 +436,9 @@
       <button class="login-close" onclick="cancelAdminLogin()" aria-label="닫기">×</button>
       <span class="eyebrow">ADMIN LOGIN</span>
       <h2 id="loginTitle">관리자 로그인</h2>
-      <p class="login-desc">운틈 관리자 페이지에 들어가려면 로그인해주세요.</p>
+      <p class="login-desc">운틈 관리자 페이지에 들어가려면 비밀번호를 입력해주세요.</p>
 
       <div class="admin-fields">
-        <div class="field">
-          <label for="adminId">아이디</label>
-          <input id="adminId" type="text" autocomplete="username" placeholder="admin">
-        </div>
         <div class="field">
           <label for="adminPw">비밀번호</label>
           <input id="adminPw" type="password" autocomplete="current-password" placeholder="비밀번호">
@@ -494,7 +490,6 @@ function showResult(){
   document.getElementById('result').scrollIntoView({behavior:'smooth', block:'nearest'});
 }
 
-const ADMIN_ID = 'admin';
 const ADMIN_PASSWORD = '1234';
 
 const defaultContent = {
@@ -561,7 +556,6 @@ function openLoginModal(){
   modal.classList.add('show');
   modal.setAttribute('aria-hidden','false');
   document.body.classList.add('modal-open');
-  document.getElementById('adminId').focus();
 }
 
 function cancelAdminLogin(){
@@ -575,23 +569,22 @@ function cancelAdminLogin(){
 }
 
 function loginAdmin(){
-  const id = document.getElementById('adminId').value.trim();
   const pw = document.getElementById('adminPw').value;
   const msg = document.getElementById('adminLoginMsg');
 
-  if(id === ADMIN_ID && pw === ADMIN_PASSWORD){
+  if(pw === ADMIN_PASSWORD){
     const modal = document.getElementById('loginModal');
     modal.classList.remove('show');
     modal.setAttribute('aria-hidden','true');
     document.body.classList.remove('modal-open');
     document.getElementById('admin').style.display = 'block';
     document.getElementById('adminPanel').style.display = 'block';
-    document.getElementById('adminLoginMsg').textContent = '';
+    msg.textContent = '';
     document.getElementById('adminPw').value = '';
     fillAdminForm();
     document.getElementById('admin').scrollIntoView({behavior:'smooth'});
   } else {
-    msg.textContent = '아이디 또는 비밀번호가 올바르지 않습니다.';
+    msg.textContent = '비밀번호가 올바르지 않습니다.';
   }
 }
 
@@ -618,7 +611,7 @@ document.addEventListener('keydown', function(event){
     cancelAdminLogin();
   }
   if(event.key === 'Enter' && modal.classList.contains('show') &&
-     (document.activeElement.id === 'adminId' || document.activeElement.id === 'adminPw')){
+     document.activeElement.id === 'adminPw'){
     loginAdmin();
   }
 });
